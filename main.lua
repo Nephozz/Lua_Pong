@@ -1,5 +1,5 @@
 --[[
-    Test Pong version 7
+    Test Pong version 8 et 9
     23/01/2022
 
     "test du language lua et de LöVE2D"
@@ -17,9 +17,15 @@
             Fix de la couleur de l'écran
             Ajout du nom de la fenêtre
             Ajout du compteur de FPS
-        
+
         --version 7 (23/01/2022):
             Implémentation des collisions
+
+        --version 8 (23/01/2022):
+            Ajout du score
+
+        --version 9 (23/01/2022):
+            Implémention du service
 
 ]]
 
@@ -86,10 +92,19 @@ end
 --[[ Update du jeu ]]
 
 function love.update(dt)
+    if gameState == 'serve' then
+        -- avant de changer le serveur on réinitialise la vitesse de la balle
+        -- selon le joueur qui a marqué
+        ball.dy = math.random(-50, 50)
+        if servingPlayer == 1 then
+            ball.dx = math.random(140, 200)
+        else
+            ball.dx = -math.random(140, 200)
+        end
     -- mouvement de la balle lors de la phase de jeu
-    if gameState == 'play' then
+    elseif gameState == 'play' then
         ball:update(dt)
-        --collision avec le joueur, renvoie la balle vers le x opposé,
+        -- collision avec le joueur, renvoie la balle vers le x opposé,
         -- et garde la direction du y avec une vitesse aléatroire
         if ball:collides(player1) then
             ball.dx = -ball.dx * 1.03
@@ -125,6 +140,19 @@ function love.update(dt)
         end
     end
 
+    -- Détection des point et attribution du service
+    if ball.x < 0 then
+        servingPlayer = 1
+        player2score = player2score + 1
+        ball:reset()
+        gameState = 'serve'
+    end
+    if ball.x > VIRTUAL_WIDTH then
+        servingPlayer = 2
+        player1score = player1score + 1
+        ball:reset()
+        gameState = 'serve'
+    end
     -- mouvement du joueur 1
     if love.keyboard.isDown('z') then
         player1.dy = -PADDLE_SPEED
@@ -155,7 +183,7 @@ function love.keypressed(key)
         love.event.quit()
     -- changement de l'état du jeu
     elseif key == 'enter' or key == 'return' then
-        if gameState == 'start' then
+        if gameState == 'start' or gameState == 'serve' then
             gameState = 'play'
         else
             gameState = 'start'
@@ -181,6 +209,8 @@ function love.draw()
 
     if gameState == 'start' then
         love.graphics.printf('Hello Start State!', 0, 20, VIRTUAL_WIDTH, 'center')
+    elseif gameState == 'serve' then
+        love.graphics.printf('Player ' .. tostring(servingPlayer) .. '\'s serve!', 0, 20, VIRTUAL_WIDTH, 'center')
     else
         love.graphics.printf('Hello Play State!', 0, 20, VIRTUAL_WIDTH, 'center')
     end
