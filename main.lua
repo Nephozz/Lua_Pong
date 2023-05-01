@@ -1,5 +1,5 @@
 --[[
-    Test Pong version 8 et 9
+    Test Pong version 10
     23/01/2022
 
     "test du language lua et de LöVE2D"
@@ -10,22 +10,9 @@
 
     #Changelog:
 
-        --version 5 (23/01/2022):
-            Refonte du programme et ajout des classes Ball.lua et Paddle.lua
-
-        --version 6 (23/01/2022):
-            Fix de la couleur de l'écran
-            Ajout du nom de la fenêtre
-            Ajout du compteur de FPS
-
-        --version 7 (23/01/2022):
-            Implémentation des collisions
-
-        --version 8 (23/01/2022):
-            Ajout du score
-
-        --version 9 (23/01/2022):
-            Implémention du service
+        --version 10 (23/01/2022):
+            Changement de certains textes
+            Ajout d'une condition de victoire et un écran de victoire
 
 ]]
 
@@ -63,7 +50,10 @@ function love.load()
     smallFont = love.graphics.newFont('font.ttf', 8)
 
     -- police pour le score
-    scoreFont = love.graphics.newFont('font.ttf', 32)
+    scoreFont = love.graphics.newFont('font.ttf', 48)
+
+    -- police pour le GO
+    largeFont = love.graphics.newFont('font.ttf', 16)
 
     love.graphics.setFont(smallFont)
 
@@ -138,21 +128,32 @@ function love.update(dt)
             ball.y = VIRTUAL_HEIGHT - 4
             ball.dy = -ball.dy
         end
+
+        -- Détection des point et attribution du service
+        if ball.x < 0 then
+            servingPlayer = 1
+            player2score = player2score + 1
+            if player2score == 10 then
+            winningPlayer = 2
+            gameState = 'done'
+            else
+                ball:reset()
+                gameState = 'serve'
+            end
+        end
+        if ball.x > VIRTUAL_WIDTH then
+            servingPlayer = 2
+            player1score = player1score + 1
+            if player1score == 10 then
+                winningPlayer = 1
+                gameState = 'done'
+            else
+                ball:reset()
+                gameState = 'serve'
+            end
+        end
     end
 
-    -- Détection des point et attribution du service
-    if ball.x < 0 then
-        servingPlayer = 1
-        player2score = player2score + 1
-        ball:reset()
-        gameState = 'serve'
-    end
-    if ball.x > VIRTUAL_WIDTH then
-        servingPlayer = 2
-        player1score = player1score + 1
-        ball:reset()
-        gameState = 'serve'
-    end
     -- mouvement du joueur 1
     if love.keyboard.isDown('z') then
         player1.dy = -PADDLE_SPEED
@@ -183,13 +184,23 @@ function love.keypressed(key)
         love.event.quit()
     -- changement de l'état du jeu
     elseif key == 'enter' or key == 'return' then
-        if gameState == 'start' or gameState == 'serve' then
+        if gameState == 'start' then
             gameState = 'play'
-        else
-            gameState = 'start'
+        elseif gameState == 'serve' then
+            gameState = 'play'
+        elseif gameState == 'done' then
+            gameState = 'serve'
 
-            -- réinitialise la position de la balle
             ball:reset()
+
+            player1score = 0
+            player2score = 0
+
+            if winningPlayer == 1 then
+                servingPlayer = 2
+            else
+                servingPlayer = 1
+            end
         end
     end
 end
@@ -205,14 +216,21 @@ function love.draw()
     love.graphics.clear(love.math.colorFromBytes(40, 45, 52, 255))
 
     -- affiche l'état du jeu en haut de l'écran
-    love.graphics.setFont(smallFont)
-
     if gameState == 'start' then
-        love.graphics.printf('Hello Start State!', 0, 20, VIRTUAL_WIDTH, 'center')
+        love.graphics.setFont(largeFont)
+        love.graphics.printf('Hello press Enter to start!', 0, 20, VIRTUAL_WIDTH, 'center')
     elseif gameState == 'serve' then
-        love.graphics.printf('Player ' .. tostring(servingPlayer) .. '\'s serve!', 0, 20, VIRTUAL_WIDTH, 'center')
-    else
-        love.graphics.printf('Hello Play State!', 0, 20, VIRTUAL_WIDTH, 'center')
+        love.graphics.setFont(largeFont)
+        love.graphics.printf('Player ' .. tostring(servingPlayer) .. '\'s serve!', 0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.setFont(smallFont)
+        love.graphics.printf('Press Enter to serve!', 0, 30, VIRTUAL_WIDTH, 'center')
+    elseif gameState == 'play' then
+        -- pas de message
+    elseif gameState == 'done' then
+        love.graphics.setFont(largeFont)
+        love.graphics.printf('Player ' .. tostring(winningPlayer) .. ' wins!', 0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.setFont(smallFont)
+        love.graphics.printf('Press Enter to retart!', 0, 30, VIRTUAL_WIDTH, 'center')
     end
 
     --affiche les scores
