@@ -1,5 +1,5 @@
 --[[
-    Test Pong version 4
+    Test Pong version 5
     23/01/2022
 
     "test du language lua et de LöVE2D"
@@ -10,29 +10,18 @@
 
     #Changelog:
 
-        --version 0 (23/01/2022):
-            Affichage du texte 'Hello World!'
-
-        --version 1 (23/01/2022):
-            Affichage basse résolution
-            Ajout de la commande 'quitter l'application'
-
-        --version 2 (23/01/2022):
-            Police et couleur de l'écran plus proche du Pong originel
-            Modification du texte 'Hello World!' en 'Hello Pong!' et déplacement en haut
-            Ajout des deux raquettes et de la balle
-
-        --version 3 (23/01/2022):
-            Implémentation du mouvement des raquettes
-            Ajout de l'affichage du score
-
-        --version 4 (23/01/2022):
-            Ajout de l'état du jeu 'start' et 'play' à la place du texte 'Hello Pong!'
-            Implémentation du mouvement de la balle
+        --version 5 (23/01/2022):
+            Refonte du programme et ajout des classes Ball.lua et Paddle.lua
 
 ]]
 
-push = require 'push'                             -- importation de la librarie 'push'
+-- importation des librarie push.lua et class.lua
+push = require 'push'
+Class = require 'class'
+
+require 'Paddle'
+
+require 'Ball'
 
 -- taille de la fenêtre
 WINDOW_WIDTH = 1280
@@ -73,16 +62,11 @@ function love.load()
     player2score = 0
 
     -- positions initiales des raquettes
-    player1Y = 30
-    player2Y = VIRTUAL_HEIGHT - 50
+    player1 = Paddle(10, 30, 5, 20)
+    player2 = Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20)
 
     -- position initiale de la balle
-    ballX = VIRTUAL_WIDTH / 2 - 2
-    ballY = VIRTUAL_HEIGHT / 2 - 2
-
-    -- vitesse initiale de la balle
-    ballDX = math.random(2) == 1 and 100 or -100
-    ballDY = math.random(-50, 50)
+    ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
 
     -- état du jeu
     gameState = 'start'
@@ -93,23 +77,29 @@ end
 function love.update(dt)
     -- mouvement du joueur 1
     if love.keyboard.isDown('z') then
-        player1Y = math.max(0, player1Y + -PADDLE_SPEED * dt)
+        player1.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('s') then
-        player1Y = math.min(VIRTUAL_HEIGHT - 20, player1Y + PADDLE_SPEED * dt)
+        player1.dy = PADDLE_SPEED
+    else
+        player1.dy = 0
     end
 
     --mouvement du joueur 2
     if love.keyboard.isDown('up') then
-        player2Y = math.max(0, player2Y + -PADDLE_SPEED * dt)
+        player2.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('down') then
-        player2Y = math.min(VIRTUAL_HEIGHT - 20, player2Y + PADDLE_SPEED * dt)
+        player2.dy = PADDLE_SPEED
+    else
+        player2.dy = 0
     end
 
     -- mouvement de la balle lors de la phase de jeu
     if gameState == 'play' then
-        ballX = ballX + ballDX * dt
-        ballY = ballY + ballDY * dt
+        ball:update(dt)
     end
+
+    player1:update(dt)
+    player2:update(dt)
 end
 
 --[[ Commandes supplémentaires ]]
@@ -126,12 +116,7 @@ function love.keypressed(key)
             gameState = 'start'
 
             -- réinitialise la position de la balle
-            ballX = VIRTUAL_WIDTH / 2 - 2
-            ballY = VIRTUAL_HEIGHT / 2 - 2
-
-            -- réinitialise la vitesse de la balle
-            ballDX = math.random(2) == 1 and 100 or -100
-            ballDY = math.random(-50, 50)
+            ball:reset()
         end
     end
 end
@@ -160,14 +145,12 @@ function love.draw()
     love.graphics.print(tostring(player1score), VIRTUAL_WIDTH / 2 - 50, VIRTUAL_HEIGHT / 3)
     love.graphics.print(tostring(player2score), VIRTUAL_WIDTH / 2 + 30, VIRTUAL_HEIGHT / 3)
 
-    -- dessine la raquette de gauche
-    love.graphics.rectangle('fill', 10, player1Y, 5, 20)
-
-    -- dessine la raquette de droite
-    love.graphics.rectangle('fill', VIRTUAL_WIDTH - 10, player2Y, 5, 20)
+    -- dessine la raquette de gauche et de droite
+    player1:render()
+    player2:render()
 
     -- dessine la balle
-    love.graphics.rectangle('fill', ballX, ballY, 4, 4)
+    ball:render()
 
     -- fin du rendu à basse résolution
     push:apply('end')
