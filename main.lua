@@ -1,5 +1,5 @@
 --[[
-    Test Pong version 6
+    Test Pong version 7
     23/01/2022
 
     "test du language lua et de LöVE2D"
@@ -17,6 +17,9 @@
             Fix de la couleur de l'écran
             Ajout du nom de la fenêtre
             Ajout du compteur de FPS
+        
+        --version 7 (23/01/2022):
+            Implémentation des collisions
 
 ]]
 
@@ -83,6 +86,45 @@ end
 --[[ Update du jeu ]]
 
 function love.update(dt)
+    -- mouvement de la balle lors de la phase de jeu
+    if gameState == 'play' then
+        ball:update(dt)
+        --collision avec le joueur, renvoie la balle vers le x opposé,
+        -- et garde la direction du y avec une vitesse aléatroire
+        if ball:collides(player1) then
+            ball.dx = -ball.dx * 1.03
+            ball.x = player1.x + 5
+
+            if ball.dy < 0 then
+                ball.dy = -math.random(10, 150)
+            else
+                ball.dy = math.random(10, 150)
+            end
+        end
+        if ball:collides(player2) then
+            ball.dx = -ball.dx * 1.03
+            ball.x = player2.x - 4
+
+            if ball.dy < 0 then
+                ball.dy = -math.random(10, 150)
+            else
+                ball.dy = math.random(10, 150)
+            end
+        end
+
+        -- collision avec le haut
+        if ball.y <= 0 then
+            ball.y = 0
+            ball.dy = - ball.dy
+        end
+
+        --collision avec le bas
+        if ball.y >= VIRTUAL_HEIGHT - 4 then
+            ball.y = VIRTUAL_HEIGHT - 4
+            ball.dy = -ball.dy
+        end
+    end
+
     -- mouvement du joueur 1
     if love.keyboard.isDown('z') then
         player1.dy = -PADDLE_SPEED
@@ -99,11 +141,6 @@ function love.update(dt)
         player2.dy = PADDLE_SPEED
     else
         player2.dy = 0
-    end
-
-    -- mouvement de la balle lors de la phase de jeu
-    if gameState == 'play' then
-        ball:update(dt)
     end
 
     player1:update(dt)

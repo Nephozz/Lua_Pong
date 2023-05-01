@@ -24,6 +24,23 @@ function Ball:init(x, y, witdh, height)
     self.dy = math.random(-50, 50)
 end
 
+--[[ Colision de la balle ]]
+
+function Ball:collides(paddle)
+    -- vérifie si le coté gauche de l'un est plus à droite que la droite de l'autre
+    if self.x > paddle.x + paddle.width or paddle.x > self.x + self.witdh then
+        return false
+    end
+
+    -- vérifie si le bas de l'un est plus haut que le dessus de l'autre
+    if self.y > paddle.y + paddle.height or paddle.y > self.y + self.height then
+        return false
+    end
+
+    -- Si aucune des deux condition n'est vérifiée alros il y a colision
+    return true
+end
+
 --[[ Réinitialisation de la balle ]]
 
 function Ball:reset()
