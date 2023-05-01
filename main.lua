@@ -1,5 +1,5 @@
 --[[
-    Test Pong version 5
+    Test Pong version 6
     23/01/2022
 
     "test du language lua et de LöVE2D"
@@ -12,6 +12,11 @@
 
         --version 5 (23/01/2022):
             Refonte du programme et ajout des classes Ball.lua et Paddle.lua
+
+        --version 6 (23/01/2022):
+            Fix de la couleur de l'écran
+            Ajout du nom de la fenêtre
+            Ajout du compteur de FPS
 
 ]]
 
@@ -38,6 +43,9 @@ PADDLE_SPEED = 200
 
 function love.load()
     love.graphics.setDefaultFilter('nearest', 'nearest')
+
+    -- titre de la fenêtre
+    love.window.setTitle('Pong')
 
     -- "seed" la RNG grâce à l'horloge de la machine
     math.randomseed(os.time())
@@ -129,7 +137,7 @@ function love.draw()
     push:apply('start')
 
     -- nettoye l'écran avec une couleur proche de celle de l'arrière plan du Pong
-    love.graphics.clear(40, 45, 52, 0.2)
+    love.graphics.clear(love.math.colorFromBytes(40, 45, 52, 255))
 
     -- affiche l'état du jeu en haut de l'écran
     love.graphics.setFont(smallFont)
@@ -152,6 +160,16 @@ function love.draw()
     -- dessine la balle
     ball:render()
 
+    displayFPS()
+
     -- fin du rendu à basse résolution
     push:apply('end')
+end
+
+--[[ Affichage des FPS ]]
+
+function displayFPS()
+    love.graphics.setFont(smallFont)
+    love.graphics.setColor(love.math.colorFromBytes(0, 255, 0, 255))
+    love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
 end
